@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Kanit } from "next/font/google";
+import { Kanit, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 
 const kanit = Kanit({
   variable: "--font-kanit",
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  variable: "--font-noto-sans-thai",
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"]
 });
@@ -21,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${kanit.className}`}
+      className={`${notoSansThai.className} ${kanit.className}`}
     >
       <body>{children}</body>
     </html>
