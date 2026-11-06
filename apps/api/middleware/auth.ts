@@ -3,7 +3,7 @@ import {
   Response,
   NextFunction,
 } from 'express'
-import jwt from 'jsonwebtoken'
+import JWTGenerate from '../src/jwt/jwt'
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -11,25 +11,23 @@ declare module 'express-serve-static-core' {
   }
 }
 
-interface JwtPayload {
-  id: number
-}
-
+// ตรวจ access token จาก header: Authorization: Bearer <token>
 export const authorization = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization
 
-  if (!authHeader) {
-    return res.status(401).json({ message: 'ไม่พบ Token' });
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'ไม่พบ Token' })
   }
 
   const token = authHeader.split(' ')[1]
 
   try {
-    const decode = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as JwtPayload
-    // console.log('decode.id', decode)
-    req.id = decode.id
+    const decoded = JWTGenerate.verifyAccessToken(token)
+    req.id = decoded.id
     next()
-  } catch (error) {
-    console.log('error', error)
+  } catch {
+    // ต้องตอบกลับเสมอ ไม่อย่างนั้น request จะค้าง
+    // frontend จะเห็น 401 แล้วไปเรียก /auth/refresh เอง
+    return res.status(401).json({ message: 'Token ไม่ถูกต้องหรือหมดอายุ' })
   }
 }

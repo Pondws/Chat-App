@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma"
+import { AppError } from "../../utils/app-error"
 
 const userService = {
   getMe: async (id: number) => {
@@ -7,12 +8,13 @@ const userService = {
       select: {
         id: true,
         email: true,
+        avatarUrl: true,
         name: true
       }
     })
 
     if (!user) {
-      throw new Error("ไม่พบผู้ใช้งาน")
+      throw new AppError("ไม่พบผู้ใช้งาน", 404)
     }
 
     return user

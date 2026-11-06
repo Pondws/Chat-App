@@ -6,13 +6,9 @@ import userService from './user.service'
 
 const userController = {
   getMe: async (req: Request, res: Response) => {
-    try {
-      const { id } = req as { id: number }
-      const user = await userService.getMe(id)
-      res.json(user)
-    } catch (error) {
-      res.status(500)
-    }
+    // req.id ถูกใส่โดย authorization middleware
+    const user = await userService.getMe(req.id!)
+    res.json(user)
   }
 }
 

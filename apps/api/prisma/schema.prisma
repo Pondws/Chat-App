@@ -7,6 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
+// ผู้ใช้งาน
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -14,4 +15,71 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  avatarUrl String?
+
+  memberships   ChatMember[]
+  messages      Message[]
+  refreshTokens RefreshToken[]
+}
+
+// ห้องแชท ใช้ได้ทั้งแชท 1:1 และแชทกลุ่ม (isGroup = true)
+model Chat {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isGroup   Boolean  @default(false)
+  name      String? // ใช้กับแชทกลุ่มเท่านั้น
+
+  // เวลาของข้อความล่าสุด ใช้เรียงรายการห้องใน sidebar โดยไม่ต้อง join messages
+  lastMessageAt DateTime?
+
+  members  ChatMember[]
+  messages Message[]
+
+  @@index([lastMessageAt])
+}
+
+// ตารางเชื่อม User <-> Chat (many-to-many)
+model ChatMember {
+  id         Int       @id @default(autoincrement())
+  joinedAt   DateTime  @default(now())
+  // ใช้คำนวณ unread: ข้อความที่ createdAt > lastReadAt คือข้อความที่ยังไม่อ่าน
+  lastReadAt DateTime?
+
+  chatId Int
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId]) // user หนึ่งคนอยู่ในห้องเดียวกันได้ครั้งเดียว
+  @@index([userId])
+}
+
+// ข้อความ
+model Message {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  content   String
+
+  chatId   Int
+  chat     Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId Int
+  sender   User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  // โหลดข้อความของห้องเรียงตามเวลา (cursor pagination) ได้เร็ว
+  @@index([chatId, createdAt])
+}
+
+// เก็บ refresh token (แบบ hash) เพื่อให้ logout / ยกเลิก token ได้จริง
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  tokenHash String   @unique
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
