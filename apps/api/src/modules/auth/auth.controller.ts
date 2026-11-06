@@ -1,40 +1,30 @@
-import {
-  Request,
-  Response,
-} from 'express'
+import { Request, Response } from 'express'
 import authService from './auth.service'
 
+// Express 5 forwards errors thrown in async handlers to the error middleware.
 const AuthController = {
   register: async (req: Request, res: Response) => {
-    try {
-      const user = await authService.register(req.body)
-      console.log('user', user)
-      res.status(200).json({ message: "สมัครสมาชิกเรียบร้อย" })
-    } catch (error) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : 'Something went wrong'
-      })
-    }
+    const user = await authService.register(req.body)
+    res.status(201).json({ message: 'สมัครสมาชิกเรียบร้อย', user })
   },
-  login: async (req: Request, res: Response) => {
-    const {
-      email,
-      password
-    } = req.body
 
-    try {
-      const data = await authService.login(email, password)
-      res.status(200).json(data)
-    } catch (error) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : 'Something went wrong'
-      })
-    }
+  login: async (req: Request, res: Response) => {
+    res.status(200).json(await authService.login(req.body))
   },
+
   refreshToken: async (req: Request, res: Response) => {
-    console.log(req)
-  }
+    res.status(200).json(await authService.refresh(req.body))
+  },
+
+  logout: async (req: Request, res: Response) => {
+    await authService.logout(req.body)
+    res.status(204).end()
+  },
+
+  logoutAll: async (req: Request, res: Response) => {
+    await authService.logoutAll(req.id!)
+    res.status(204).end()
+  },
 }
 
 export default AuthController
-

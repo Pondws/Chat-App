@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma"
+import { HttpError } from "../../lib/http-error"
 
 const userService = {
   getMe: async (id: number) => {
@@ -12,7 +13,7 @@ const userService = {
     })
 
     if (!user) {
-      throw new Error("ไม่พบผู้ใช้งาน")
+      throw new HttpError(404, "ไม่พบผู้ใช้งาน")
     }
 
     return user
