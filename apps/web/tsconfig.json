@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "utils": ["./utils/index.ts"],
+      "types": ["./types/index.ts"],
+      "hooks": ["./hooks/index.ts"],
+      "apis": ["./apis/index.ts"]
     }
   },
   "include": [

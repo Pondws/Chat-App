@@ -9,7 +9,7 @@ app.use(express.json())
 app.use('/auth', authRoute)
 app.use(userRoute)
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
