@@ -1,9 +1,13 @@
-import { Router } from "express";
-import userController from "./user.controller";
-import { authorization } from "../../../middleware/auth";
+import { Router } from "express"
+import authMiddleware from "../../middlewares/auth"
+import UserController from "./user.controller"
 
 const router = Router()
 
-router.get('/me', authorization, userController.getMe)
+router.get(
+  "/me",
+  authMiddleware,
+  UserController.getMe
+)
 
 export default router

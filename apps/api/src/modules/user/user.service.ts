@@ -1,21 +1,20 @@
-import { prisma } from "../../../lib/prisma"
+import { prisma } from "../../lib/prisma"
 
 const userService = {
-  getMe: async (id: number) => {
-    const user = await prisma.user.findUnique({
-      where: { id },
+  getMe: (userId: string) => {
+    return prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
       select: {
         id: true,
         email: true,
-        name: true
-      }
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     })
-
-    if (!user) {
-      throw new Error("ไม่พบผู้ใช้งาน")
-    }
-
-    return user
   }
 }
 

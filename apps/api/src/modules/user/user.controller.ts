@@ -1,19 +1,17 @@
-import {
-  Request,
-  Response
-} from 'express'
-import userService from './user.service'
+import type { Request, Response } from "express"
+import userService from "./user.service"
 
-const userController = {
+const UserController = {
   getMe: async (req: Request, res: Response) => {
     try {
-      const { id } = req as { id: number }
-      const user = await userService.getMe(id)
-      res.json(user)
+      const user = await userService.getMe(req.user!.id)
+      return res.json(user)
     } catch (error) {
-      res.status(500)
+      return res.status(404).json({
+        message: "User not found",
+      })
     }
   }
 }
 
-export default userController
+export default UserController
