@@ -1,10 +1,13 @@
-import { Request, Response } from "express"
-import { errorHandler } from "../../middlewares/error-handler"
 import { prisma } from "../../lib/prisma"
 
 type CreateConversation = {
   participantIds?: string[]
   name?: string
+}
+
+type ListOptions = {
+  limit?: number
+  cursor?: string
 }
 
 const userSelect = {
@@ -70,7 +73,7 @@ const conversationService = {
     })
     if (found !== others.length) throw new Error("เกิดข้อผิดพลาด")
 
-    const isGroup = others.length > 0
+    const isGroup = others.length > 1
 
     if (!isGroup) {
       const existing = await prisma.conversation.findFirst({
@@ -100,6 +103,88 @@ const conversationService = {
 
     return { conversation, created: true }
   },
+  getList: async (userId: string, { limit = 20, cursor }: ListOptions) => {
+    const members = await prisma.conversationMember.findMany({
+      where: { userId },
+      orderBy: [
+        {
+          conversation: {
+            updatedAt: "desc"
+          },
+        },
+        { conversationId: "desc" }
+      ],
+      take: limit + 1,
+      ...(cursor && {
+        cursor: {
+          conversationId_userId: {
+            conversationId: cursor, userId
+          }
+        },
+        skip: 1
+      }),
+      include: {
+        conversation: {
+          include: {
+            members: {
+              where: {
+                userId: {
+                  not: userId
+                }
+              },
+              take: 1,
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  }
+                }
+              }
+            },
+            message: {
+              orderBy: {
+                createdAt: "desc"
+              },
+              take: 1
+            }
+          }
+        }
+      }
+    })
+
+    const hasMore = members.length > limit
+    const page = hasMore ? members.slice(0, limit) : members
+
+    const unreadCounts = await Promise.all(
+      page.map(m => prisma.message.count({
+        where: {
+          conversationId: m.conversationId,
+          senderId: { not: m.userId },
+          createdAt: { gt: m.lastReadAt ?? m.joinedAt }
+        }
+      }))
+    )
+
+    const data = page.map((m, i) => {
+      const c = m.conversation
+      const other = c.members[0]?.user
+      return {
+        id: c.id,
+        isGroup: c.isGroup,
+        name: c.isGroup ? c.name : other?.name ?? 'Unknown',
+        // avatarUrl: c.isGroup ? null : other?.avatarUrl ?? null,
+        lastMessage: c.message[0] ?? null,
+        unreadCount: unreadCounts[i],
+        updatedAt: c.updatedAt,
+      }
+    })
+
+    return {
+      data,
+      nextCursor: hasMore ? page[page.length - 1].conversationId : null,
+    }
+  }
 }
 
 export default conversationService
