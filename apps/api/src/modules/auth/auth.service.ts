@@ -12,6 +12,7 @@ import {
 import { AppError } from "../../errors/app-error"
 
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000
+const DUMMY_HASH = await bcrypt.hash("dummy-password", 12)
 
 const hashToken = (token: string) => {
   return crypto
@@ -61,8 +62,6 @@ const authService = {
     const user = await prisma.user.findUnique({
       where: { email: data.email }
     })
-
-    const DUMMY_HASH = "847df5a8d8d01e02af96786efbc10585e47c46223700894077ed5e8d31c39543"
 
     const match = await bcrypt.compare(data.password, user?.password ?? DUMMY_HASH)
 

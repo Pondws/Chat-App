@@ -16,6 +16,3 @@ export type RegisterInput =
 
 export type LoginInput =
   z.infer<typeof authSchema.login>
-
-// export type RefreshInput =
-//   z.infer<typeof authSchema.refresh>

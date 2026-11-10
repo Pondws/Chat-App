@@ -12,6 +12,17 @@ enum Role {
   USER
 }
 
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ConversationType {
+  GROUP
+  DIRECT
+}
+
 model User {
   id            String         @id @default(uuid()) @db.Uuid
   email         String         @unique
@@ -20,8 +31,10 @@ model User {
   role          Role           @default(USER)
   refreshTokens RefreshToken[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  conversationMembers ConversationMember[]
+  messages            Message[]
 }
 
 model RefreshToken {
@@ -36,4 +49,43 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ConversationMember[]
+  message Message[]
+}
+
+model ConversationMember {
+  conversationId String     @db.Uuid
+  userId         String     @db.Uuid
+  role           MemberRole @default(MEMBER)
+  joinedAt       DateTime   @default(now())
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  senderId       String       @db.Uuid
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  deletedAt      DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
 }

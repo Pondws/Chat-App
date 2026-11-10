@@ -3,6 +3,11 @@ export namespace AuthType {
     email: string
     password: string
   }
+  export interface RegisterProps {
+    email: string
+    password: string
+    name: string
+  }
 }
 
 export interface AuthStore {
