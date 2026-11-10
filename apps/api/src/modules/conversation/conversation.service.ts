@@ -26,11 +26,10 @@ const withMembers = {
 
 const conversationService = {
   create: async (userId: string, body: CreateConversation) => {
+    const { participantIds, name } = body
+    if (!Array.isArray(participantIds)) throw new Error("เกิดข้อผิดพลาด")
 
-    console.log("test", userId, body)
-    if (!Array.isArray(body.participantIds)) throw new Error("เกิดข้อผิดพลาด")
-
-    const unique = [...new Set(body.participantIds)]
+    const unique = [...new Set(participantIds)]
     if (unique.length === 0) throw new Error("เกิดข้อผิดพลาด")
 
     const others = unique.filter(id => id !== userId)
@@ -100,7 +99,7 @@ const conversationService = {
     })
 
     return { conversation, created: true }
-  }
+  },
 }
 
 export default conversationService
