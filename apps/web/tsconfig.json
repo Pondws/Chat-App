@@ -23,7 +23,9 @@
       "utils": ["./utils/index.ts"],
       "types": ["./types/index.ts"],
       "hooks": ["./hooks/index.ts"],
-      "apis": ["./apis/index.ts"]
+      "apis": ["./apis/index.ts"],
+      "schemas": ["./schemas/index.ts"],
+      "components": ["./components/index.ts"],
     }
   },
   "include": [
