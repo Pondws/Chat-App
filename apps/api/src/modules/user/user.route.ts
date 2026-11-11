@@ -4,10 +4,7 @@ import UserController from "./user.controller"
 
 const router = Router()
 
-router.get(
-  "/me",
-  authMiddleware,
-  UserController.getMe
-)
+router.get("/me", authMiddleware, UserController.getMe)
+router.get("/users", authMiddleware, UserController.searh)
 
 export default router

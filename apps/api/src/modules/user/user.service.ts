@@ -15,6 +15,23 @@ const userService = {
         updatedAt: true,
       },
     })
+  },
+  search: (query: string, page = 1, limit = 20) => {
+    return prisma.user.findMany({
+      where: {
+        name: {
+          contains: query,
+          mode: "insensitive"
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: "asc" },
+      skip: (page - 1) * limit,
+      take: limit
+    })
   }
 }
 
