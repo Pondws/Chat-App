@@ -55,6 +55,7 @@ model Conversation {
   id        String   @id @default(uuid()) @db.Uuid
   name      String?
   isGroup   Boolean  @default(false)
+  directKey String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
