@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import conversationService from "./conversation.service"
+import { ConversationSchema } from "./conversation.schema"
 
 const conversationController = {
   create: async (req: Request, res: Response) => {
@@ -12,7 +13,18 @@ const conversationController = {
       cursor: req.query.cursor as string | undefined
     })
     res.json(result)
-  }
+  },
+  getDirect: async (req: Request, res: Response) => {
+    const { userId } = ConversationSchema.userParams.parse(req.params)
+    const result = await conversationService.getDirect(req.user!.id, userId)
+    res.status(200).json(result)
+  },
+  sendDirect: async (req: Request, res: Response) => {
+    const { userId } = ConversationSchema.userParams.parse(req.params)
+    const { content } = ConversationSchema.content.parse(req.body)
+    const result = await conversationService.sendDirect(req.user!.id, userId, content)
+    res.status(result.created ? 201 : 200).json(result)
+  },
 }
 
 export default conversationController

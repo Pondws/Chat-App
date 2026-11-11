@@ -4,7 +4,10 @@ import authMiddleware from "../../middlewares/auth"
 
 const router = Router()
 
-router.post("/", authMiddleware, conversationController.create)
 router.get("/", authMiddleware, conversationController.getList)
+router.get("/direct/:userId", authMiddleware, conversationController.getDirect)
+router.post("/direct/:userId/message", authMiddleware, conversationController.sendDirect)
+
+router.post("/", authMiddleware, conversationController.create)
 
 export default router

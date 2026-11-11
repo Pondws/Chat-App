@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client"
 import { prisma } from "../../lib/prisma"
 
 type CreateConversation = {
@@ -14,18 +15,18 @@ const userSelect = {
   id: true,
   name: true
 }
+
 const withMembers = {
   members: {
-    include:
-    {
-      user:
-      {
-        select:
-          userSelect
+    include: {
+      user: {
+        select: userSelect
       }
     }
   }
 }
+
+const toDirectKey = (a: string, b: string) => [a, b].sort().join(":")
 
 const conversationService = {
   create: async (userId: string, body: CreateConversation) => {
@@ -184,6 +185,83 @@ const conversationService = {
       data,
       nextCursor: hasMore ? page[page.length - 1].conversationId : null,
     }
+  },
+  getDirect: async (userId: string, otherId: string) => {
+    const result = await prisma.conversation.findUnique({
+      where: {
+        directKey: [userId, otherId].sort().join(":"),
+      },
+      include: withMembers
+    })
+    return result
+  },
+  sendDirect: async (userId: string, otherId: string, content: string) => {
+    const isSelf = userId === otherId
+
+    if (!isSelf) {
+      const other = await prisma.user.findUnique({
+        where: { id: otherId },
+        select: { id: true }
+      })
+
+      if (!other) throw new Error("ไม่พบผู้ใช้")
+    }
+
+    const directKey = toDirectKey(userId, otherId)
+    return prisma.$transaction(async (tx) => {
+      const now = new Date()
+      let conversation = await tx.conversation.findUnique({
+        where: {
+          directKey
+        }
+      })
+
+      const created = !conversation
+
+      if (!conversation) {
+        conversation = await tx.conversation.create({
+          data: {
+            isGroup: false,
+            directKey,
+            members: {
+              create: isSelf
+                ? [{ userId, lastReadAt: now }]
+                : [{ userId, lastReadAt: now }, { userId: otherId }]
+            }
+          }
+        })
+      } else {
+        await tx.conversation.update({
+          where: { id: conversation.id },
+          data: { updatedAt: now }
+        })
+        await tx.conversationMember.update({
+          where: {
+            conversationId_userId: {
+              conversationId: conversation.id,
+              userId
+            }
+          },
+          data: { lastReadAt: now }
+        })
+      }
+
+      const message = await tx.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderId: userId,
+          content,
+          createdAt: now
+        },
+        include: {
+          sender: {
+            select: userSelect
+          }
+        }
+      })
+
+      return { conversationId: conversation.id, created, message }
+    })
   }
 }
 
