@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import authRoute from './modules/auth/auth.route'
 import userRoute from './modules/user/user.route'
 import ConversationRoute from './modules/conversation/conversation.route'
+import MessageRoute from './modules/message/message.route'
 
 const app = express()
 
@@ -18,7 +19,8 @@ app.use(cookieParser())
 
 app.use('/auth', authRoute)
 app.use(userRoute)
-app.use('/conversation', ConversationRoute)
+app.use('/conversations', ConversationRoute)
+app.use('/conversations', MessageRoute)
 
 const PORT = process.env.PORT
 

@@ -27,6 +27,16 @@ const withMembers = {
 }
 
 const toDirectKey = (a: string, b: string) => [a, b].sort().join(":")
+export const assertMember = async (conversationId: string, userId: string) => {
+  const member = await prisma.conversationMember.findUnique({
+    where: {
+      conversationId_userId: { conversationId, userId }
+    }
+  })
+
+  if (!member) throw new Error("ไม่พบแชท")
+  return member
+}
 
 const conversationService = {
   create: async (userId: string, body: CreateConversation) => {
